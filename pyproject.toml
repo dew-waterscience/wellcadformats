@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>45", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wellcadformats"
+authors = [
+    {name = "Kent Inverarity (SA Govt)", email = "kent.inverarity@sa.gov.au"}
+]
+description = "Read/write WellCAD's ASCII data file formats"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "pandas",
+    "numpy"
+]
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Customer Service",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Other Audience",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 2.6",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.3",
+    "Programming Language :: Python :: 3.4",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Filesystems",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+keywords = ["science", "geophysics"]
+
+[project.scripts]
+sonicgui = "wellcadformats.sonicgui:main"
+
+[tool.setuptools_scm]
