@@ -38,6 +38,10 @@ classifiers = [
 ]
 keywords = ["science", "geophysics"]
 
+[project.urls]
+"Homepage" = "https://github.com/dew-waterscience/wellcadformats"
+"Bug Tracker" = "https://github.com/dew-waterscience/wellcadformats/issues"
+
 [project.scripts]
 sonicgui = "wellcadformats.sonicgui:main"
 
