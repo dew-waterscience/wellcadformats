@@ -11,7 +11,7 @@ from . import arraydata
 
 
 
-class SonicViewerWindow(QtGui.QMainWindow):
+class SonicViewerWindow(QtGui.QWindow):
     def __init__(self):
         super(SonicViewerWindow, self).__init__()
         fns = sorted(glob.glob("RX*Wide Band.waf"))
