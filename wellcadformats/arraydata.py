@@ -186,8 +186,8 @@ class WAF(object):
         file_obj.write(",".join(["Depth"] + [f"{t:.2f} us" for t in self.times]) + "\n")
         file_obj.write(",".join(["m"] + ["" for t in self.times]) + "\n")
         out_data = np.column_stack([self.depths, self.data])
-        out_data.to_csv(file_obj, header=False)
-
+        for i in range(out_data.shape[0]):
+            file_obj.write(",".join([str(x) for x in out_data[i, :]]) + "\n")
 
 
 
