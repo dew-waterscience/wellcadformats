@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 
 class WAF(object):
 
-    def __init__(self, fn=None):
-        if fn:
-            self.load(fn)
+    def __init__(self, filename=None):
+        if filename is not None:
+            self.read(filename)
 
     @property
     def vampl(self):
@@ -21,15 +21,22 @@ class WAF(object):
             value = np.nanmax(self.data)
         self.__vampl = value
 
-    def load(self, fn):
-        self.fn = fn
-        alldata = np.loadtxt(open(fn, mode="r"), skiprows=2, delimiter=",")
+    def read(self, filename):
+        self.filename = filename
+        alldata = np.loadtxt(open(filename, mode="r"), skiprows=2, delimiter=",")
         depths = alldata[:, 0]
-        with open(fn, mode="r") as f:
+        with open(filename, mode="r") as f:
             line = f.readline()
         times = np.array([float(s.split()[0]) for s in line.split(",")[1:]])
         data = alldata[:, 1:]
         self.generate(data, depths, times)
+
+    
+    @classmethod
+    def from_data(cls, data, depths, times):
+        self = cls()
+        self.generate(data, depths, times)
+        return self
 
     def generate(self, data, depths, times, parent=None, vampl=None):
         self.data = data
@@ -44,20 +51,31 @@ class WAF(object):
             self.vampl = parent.vampl
             self.cmap = parent.cmap
 
-    def plot_amplitude_hist(self, fig=None, ax=None):
+    def plot_amplitude_hist(self, show_vampl=True, fig=None, ax=None):
         if ax is None:
             if fig is None:
                 fig = plt.figure()
             ax = fig.add_subplot(111)
         amplitudes = ax.hist(self.data.ravel(), bins=30, log=True)
+        ax.axvline(self.vampl * -1, color="darkred")
+        ax.axvline(self.vampl, color="darkred", label="vampl")
+        return ax
 
     def print_depths(self):
-        print('%s %s %s' % ("depth range", depths[:3], "..."))
-        print('%s %s %s' % (depths[self.n-3:], "n =", self.n))
-        print('%s %s %s %s %s %s' % ("time range", times[:3], "...", times[self.m-3:], "m =", self.m))
-        print(str(self.data.shape))
+        lines = [
+            f"depths range from {self.depths[0]:.2f} to {self.depths[-1]:.2f} n = {self.n}",
+            f"times range from {self.times[0]:.0f} to {self.times[-1]:.0f} m = {self.m}",
+            f"data shape = {self.data.shape}",
+        ]
+        print("\n".join(lines))
 
     def imshow(self, vampl=None, fig=None, figsize=None, ax=None, **kws):
+        """Show a variable density log (VDL).
+        
+        Args:
+            
+        
+        """
         if ax is None:
             if figsize:
                 fig = plt.figure(figsize=figsize)
@@ -75,8 +93,21 @@ class WAF(object):
                 self.depths[-1], self.depths[0]])
         defkws.update(**kws)
         ax.imshow(self.data, **defkws)
+        return ax
 
     def extract(self, drange=None, trange=None):
+        """Extract of subset of data as a ``wellcadformats.WAF`` object.
+        
+        Args:
+            drange (tuple of length 2): the range of depths to extract.
+                If None, all depths are extracted.
+            trange (tuple of length 2): the range of times to extract.
+                if None, all times are extracted.
+                
+        Returns:
+            WAF object.
+                
+        """
         if drange is None:
             drange = (None, None)
         if trange is None:
@@ -107,14 +138,36 @@ class WAF(object):
         new.generate(self.data[d0i: d1i, t0i: t1i], depths, times, parent=self)
         return new
 
-    def htrace(self, depth, retdepth=False):
+    def htrace(self, depth):
+        """Return a horizontal (i.e. depth-invariant) trace.
+        
+        Args:
+            depth (float): if it is not present, the nearest
+                depth will be returned, no interpolation
+                between frames will be done.
+        
+        Returns:
+            depth, data (tuple) - depth as requested, data
+            is an array of length *m*
+        
+        """
         di = np.argmin((self.depths - depth) ** 2)
-        if retdepth:
-            return self.depths[di], self.data[di, :]
-        else:
-            return self.data[di, :]
+        return self.depths[di], self.data[di, :]
 
-    def vtrace(self, time, rettime=False, interptime=True):
+    def vtrace(self, time, interptime=True):
+        """Return a vertical (i.e. time-invariant) trace.
+        
+        Args:
+            time (float)
+            interptime (bool): interpolate the data to
+                the time given, if it is not already
+                present
+
+        Returns:
+            time, data (tuple) - time is a float, data
+            is an array of length *n*
+        
+        """
         ti = np.argmin((self.times - time) ** 2)
         if interptime:
             if ti < len(self.times) - 1:
@@ -125,12 +178,16 @@ class WAF(object):
             damp = self.data[:, ti2] - self.data[:, ti1]
             dt = self.times[ti2] - self.times[ti1]
             plusamp = (damp / dt) * (time - self.times[ti1])
-            return self.data[:, ti1] + plusamp
+            return time, self.data[:, ti1] + plusamp
         else:
-            if rettime:
-                return self.times[ti], self.data[:, ti]
-            else:
-                return self.data[:, ti]
+            return self.times[ti], self.data[:, ti]
+        
+    def to_file(self, file_obj):
+        file_obj.write(",".join(["Depth"] + [f"{t:.2f} us" for t in self.times]) + "\n")
+        file_obj.write(",".join(["m"] + ["" for t in self.times]) + "\n")
+        out_data = np.vstack([self.depths, self.data])
+        out_data.to_csv(file_obj, header=False)
+
 
 
 
