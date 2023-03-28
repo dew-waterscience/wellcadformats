@@ -185,7 +185,9 @@ class WAF(object):
     def to_file(self, file_obj):
         file_obj.write(",".join(["Depth"] + [f"{t:.2f} us" for t in self.times]) + "\n")
         file_obj.write(",".join(["m"] + ["" for t in self.times]) + "\n")
-        out_data = np.vstack([self.depths, self.data])
+        print(f"depths shape: {self.depths.shape}")
+        print(f"data shape: {self.data.shape}")
+        out_data = np.hstack([self.depths, self.data])
         out_data.to_csv(file_obj, header=False)
 
 
