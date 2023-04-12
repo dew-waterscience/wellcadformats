@@ -1,21 +1,31 @@
 import glob
 import sys
 import os
+import logging
 
 import numpy as np
 import pandas as pd
+
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+
+# from __feature__ import snake_case, true_property
 
 from . import arraydata
 
 
+logger = logging.getLogger(__name__)
 
-class SonicViewerWindow(QtGui.QWindow):
+
+class SonicViewerWindow(QMainWindow):
     def __init__(self):
         super(SonicViewerWindow, self).__init__()
-        fns = sorted(glob.glob("RX*Wide Band.waf"))
-        tab_widget = QtGui.QTabWidget()
+        # fns = sorted(glob.glob("RX*Wide Band.waf"))
+        fns = sorted(glob.glob("*pass2_*.waf"))
+        tab_widget = QTabWidget()
         self.setCentralWidget(tab_widget)
         for fn in fns:
             print("Loading %s..." % fn)
@@ -25,7 +35,7 @@ class SonicViewerWindow(QtGui.QWindow):
 
 
 
-class SonicLog(QtGui.QWidget):
+class SonicLog(QWidget):
     def __init__(self, waf_fn):
         super(SonicLog, self).__init__()
 
@@ -34,20 +44,20 @@ class SonicLog(QtGui.QWidget):
         self.waf_fn = waf_fn
         self.vdl = VDL(self.waf)
         self.time_plot = pg.PlotWidget()
-        self.vertical_plot_panel = QtGui.QWidget()
-        layout1 = QtGui.QVBoxLayout()
+        self.vertical_plot_panel = QWidget()
+        layout1 = QVBoxLayout()
         self.vertical_plot_panel.setLayout(layout1)
         self.vertical_plot = pg.PlotWidget()
-        self.export_button = QtGui.QPushButton("Export CSV")
+        self.export_button = QPushButton("Export CSV")
         layout1.addWidget(self.vertical_plot)
         layout1.addWidget(self.export_button)
 
-        self.topbottom_splitter = QtGui.QSplitter()
-        self.leftright_splitter = QtGui.QSplitter()
-        self.topbottom_splitter.setOrientation(QtCore.Qt.Vertical)
-        self.leftright_splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.topbottom_splitter = QSplitter()
+        self.leftright_splitter = QSplitter()
+        self.topbottom_splitter.setOrientation(Qt.Vertical)
+        self.leftright_splitter.setOrientation(Qt.Horizontal)
         
-        layout = QtGui.QHBoxLayout()
+        layout = QHBoxLayout()
         layout.addWidget(self.leftright_splitter)
         self.setLayout(layout)
         
@@ -127,12 +137,15 @@ class DepthSlice(object):
             depth = np.mean(vdl.waf.depths)
         self.depth = depth
         self.vdl_line = pg.InfiniteLine(depth, angle=0, movable=True, bounds=(vdl.waf.depths[0], vdl.waf.depths[-1]))
+        logger.debug(f"self.vdl.waf.times.shape = {self.vdl.waf.times.shape}")
+        logger.debug(f"self.trace.shape = {self.trace.shape}")
         self.trace_line = pg.PlotDataItem(self.vdl.waf.times, self.trace)
         self.vdl_line.sigPositionChanged.connect(self.update)
 
     @property
     def trace(self):
-        return self.vdl.waf.htrace(self.depth)
+        depth, trace_data = self.vdl.waf.htrace(self.depth)
+        return trace_data
         
     def update(self):
         self.depth = self.vdl_line.value()
@@ -233,7 +246,7 @@ class FixedWindow(object):
 
 class VDL(pg.ImageView):
 
-    sigVamplChanged = QtCore.Signal(float)
+    sigVamplChanged = Signal(float)
 
     def __init__(self, waf):
         super(VDL, self).__init__(view=pg.PlotItem())
@@ -274,9 +287,10 @@ class VDL(pg.ImageView):
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     pg.setConfigOptions(imageAxisOrder='row-major')
-    app = QtGui.QApplication([])
-    app.setStyleSheet("QWidget { font-size: 0.9em; font-family: Verdana;}")
+    app = QApplication([])
+    # app.setStyleSheet("QWidget { font-size: 0.9em; font-family: Verdana;}")
     # window = SonicViewerWindow(sys.argv[1])
     window = SonicViewerWindow()
     window.show()

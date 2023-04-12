@@ -1,8 +1,11 @@
 import os
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+logger = logging.getLogger(__name__)
 
 
 class WAF(object):
@@ -152,6 +155,7 @@ class WAF(object):
         
         """
         di = np.argmin((self.depths - depth) ** 2)
+        logger.debug(f"self.data.shape = {self.data.shape} - self.times.shape = {self.times.shape}")
         return self.depths[di], self.data[di, :]
 
     def vtrace(self, time, interptime=True):
@@ -169,16 +173,10 @@ class WAF(object):
         
         """
         ti = np.argmin((self.times - time) ** 2)
+        logger.debug(f"self.data.shape = {self.data.shape} - self.depths.shape = {self.depths.shape}")
         if interptime:
-            if ti < len(self.times) - 1:
-                tiextra = ti + 1
-            elif ti > 0:
-                tiextra = ti - 1
-            ti1, ti2 = sorted([ti, tiextra])
-            damp = self.data[:, ti2] - self.data[:, ti1]
-            dt = self.times[ti2] - self.times[ti1]
-            plusamp = (damp / dt) * (time - self.times[ti1])
-            return time, self.data[:, ti1] + plusamp
+            # Still to implement interpolation of times.
+            return time, self.data[:, ti]
         else:
             return self.times[ti], self.data[:, ti]
         
