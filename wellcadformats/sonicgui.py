@@ -34,7 +34,6 @@ class SonicViewerWindow(QMainWindow):
         self.showMaximized()
 
 
-
 class SonicLog(QWidget):
     def __init__(self, waf_fn):
         super(SonicLog, self).__init__()
@@ -56,18 +55,17 @@ class SonicLog(QWidget):
         self.leftright_splitter = QSplitter()
         self.topbottom_splitter.setOrientation(Qt.Vertical)
         self.leftright_splitter.setOrientation(Qt.Horizontal)
-        
+
         layout = QHBoxLayout()
         layout.addWidget(self.leftright_splitter)
         self.setLayout(layout)
-        
+
         self.leftright_splitter.addWidget(self.vertical_plot_panel)
         self.leftright_splitter.addWidget(self.topbottom_splitter)
 
         self.topbottom_splitter.addWidget(self.vdl)
         self.topbottom_splitter.addWidget(self.time_plot)
-        
-        
+
         self.rois = []
         self.add_roi(DepthSlice(self.vdl, self.time_plot))
         self.add_roi(FixedWindow(200, 50, self.vdl, self.vertical_plot, self.time_plot))
@@ -88,21 +86,22 @@ class SonicLog(QWidget):
         fixed_window = self.rois[1]  # very hard-coded thingy
         t0 = fixed_window.t0
         width = fixed_window.width
-        fn = self.waf_fn.replace(".waf", "_%.0f+%.0fus.csv" % (fixed_window.t0, fixed_window.width))
+        fn = self.waf_fn.replace(
+            ".waf", "_%.0f+%.0fus.csv" % (fixed_window.t0, fixed_window.width)
+        )
         depths, times, values = fixed_window.data()
         depths, times, values = resample([depths, times], [depths, values])
         keys = [
             "Depth",
             "Time (%.0f-%.0f us)" % (t0, t0 + width),
-            "Amplitude (%.0f-%.0f us)" % (t0, t0 + width)
-            ]
+            "Amplitude (%.0f-%.0f us)" % (t0, t0 + width),
+        ]
         data = {
             "Depth": depths,
             "Time (%.0f-%.0f us)" % (t0, t0 + width): times,
             "Amplitude (%.0f-%.0f us)" % (t0, t0 + width): values,
-            }
+        }
         pd.DataFrame(data, columns=keys).to_csv(fn, index=False)
-
 
 
 def resample(*pairs):
@@ -119,14 +118,14 @@ def resample(*pairs):
         index_array = np.append(index_array, pair[0])
         min_gradients.append(np.min(np.gradient(pair[0])))
     print(min_gradients)
-    index_reg = np.arange(np.min(index_array), np.max(index_array), np.min(min_gradients) / 5.)
+    index_reg = np.arange(
+        np.min(index_array), np.max(index_array), np.min(min_gradients) / 5.0
+    )
     data_regs = []
     for index_array, data in new_pairs:
         data_reg = np.interp(index_reg, index_array, data, left=np.nan, right=np.nan)
         data_regs.append(data_reg)
     return [index_reg] + data_regs
-
-
 
 
 class DepthSlice(object):
@@ -136,7 +135,9 @@ class DepthSlice(object):
         if depth is None:
             depth = np.mean(vdl.waf.depths)
         self.depth = depth
-        self.vdl_line = pg.InfiniteLine(depth, angle=0, movable=True, bounds=(vdl.waf.depths[0], vdl.waf.depths[-1]))
+        self.vdl_line = pg.InfiniteLine(
+            depth, angle=0, movable=True, bounds=(vdl.waf.depths[0], vdl.waf.depths[-1])
+        )
         logger.debug(f"self.vdl.waf.times.shape = {self.vdl.waf.times.shape}")
         logger.debug(f"self.trace.shape = {self.trace.shape}")
         self.trace_line = pg.PlotDataItem(self.vdl.waf.times, self.trace)
@@ -146,7 +147,7 @@ class DepthSlice(object):
     def trace(self):
         depth, trace_data = self.vdl.waf.htrace(self.depth)
         return trace_data
-        
+
     def update(self):
         self.depth = self.vdl_line.value()
         self.trace_line.setData(self.vdl.waf.times, self.trace)
@@ -155,11 +156,10 @@ class DepthSlice(object):
     def show(self):
         self.vdl.addItem(self.vdl_line)
         self.time_plot.addItem(self.trace_line)
-        
+
     def hide(self):
         self.vdl.removeItem(self.vdl_line)
         self.time_plot.removeItem(self.trace_line)
-
 
 
 class FixedWindow(object):
@@ -168,8 +168,12 @@ class FixedWindow(object):
         self.vertical_plot = vertical_plot
         self.time_plot = time_plot
 
-        self.vdl_roi = pg.LinearRegionItem(values=[t0, t0+width], orientation=pg.LinearRegionItem.Vertical)
-        self.time_plot_roi = pg.LinearRegionItem(values=[t0, t0+width], orientation=pg.LinearRegionItem.Vertical)
+        self.vdl_roi = pg.LinearRegionItem(
+            values=[t0, t0 + width], orientation=pg.LinearRegionItem.Vertical
+        )
+        self.time_plot_roi = pg.LinearRegionItem(
+            values=[t0, t0 + width], orientation=pg.LinearRegionItem.Vertical
+        )
         depths, times, values = self.data()
         self.statistic_value_curve = pg.PlotDataItem(values, depths)
         self.statistic_time_curve = pg.PlotDataItem(times, depths, pen="r")
@@ -197,8 +201,7 @@ class FixedWindow(object):
 
     def data(self, statistic="min(positive)"):
         try:
-            self.window_waf = self.vdl.waf.extract(
-                    trange=self.vdl_roi.getRegion())
+            self.window_waf = self.vdl.waf.extract(trange=self.vdl_roi.getRegion())
         except ValueError:
             return [], [], []
         if statistic == "max(positive)":
@@ -243,9 +246,7 @@ class FixedWindow(object):
         self.vdl.removeItem(self.statistic_time_curve)
 
 
-
 class VDL(pg.ImageView):
-
     sigVamplChanged = Signal(float)
 
     def __init__(self, waf):
@@ -285,10 +286,9 @@ class VDL(pg.ImageView):
         hist.setLevels(value * -1, value)
 
 
-
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    pg.setConfigOptions(imageAxisOrder='row-major')
+    pg.setConfigOptions(imageAxisOrder="row-major")
     app = QApplication([])
     # app.setStyleSheet("QWidget { font-size: 0.9em; font-family: Verdana;}")
     # window = SonicViewerWindow(sys.argv[1])
@@ -297,6 +297,5 @@ def main():
     sys.exit(app.exec_())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-    

@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class WAF(object):
-
     def __init__(self, filename=None):
         if filename is not None:
             self.read(filename)
@@ -34,7 +33,6 @@ class WAF(object):
         data = alldata[:, 1:]
         self.generate(data, depths, times)
 
-    
     @classmethod
     def from_data(cls, data, depths, times):
         self = cls()
@@ -74,42 +72,45 @@ class WAF(object):
 
     def imshow(self, vampl=None, fig=None, figsize=None, ax=None, **kws):
         """Show a variable density log (VDL).
-        
+
         Args:
-            
-        
+
+
         """
         if ax is None:
             if figsize:
                 fig = plt.figure(figsize=figsize)
-            elif fig is None: 
+            elif fig is None:
                 fig = plt.figure()
             ax = fig.add_subplot(111)
         if vampl:
             self.vampl = vampl
         defkws = dict(
-            cmap=self.cmap, vmin=-1*self.vampl, vmax=self.vampl,
-            interpolation="nearest", origin="upper",
+            cmap=self.cmap,
+            vmin=-1 * self.vampl,
+            vmax=self.vampl,
+            interpolation="nearest",
+            origin="upper",
             # left, right, bottom, top
-            aspect="auto", extent=[
-                self.times[0], self.times[-1],
-                self.depths[-1], self.depths[0]])
+            aspect="auto",
+            extent=[self.times[0], self.times[-1], self.depths[-1], self.depths[0]],
+        )
         defkws.update(**kws)
         ax.imshow(self.data, **defkws)
         return ax
 
     def extract(self, drange=None, trange=None):
         """Extract of subset of data as a ``wellcadformats.WAF`` object.
-        
+
         Args:
             drange (tuple of length 2): the range of depths to extract.
                 If None, all depths are extracted.
             trange (tuple of length 2): the range of times to extract.
                 if None, all times are extracted.
-                
+
         Returns:
             WAF object.
-                
+
         """
         if drange is None:
             drange = (None, None)
@@ -135,32 +136,34 @@ class WAF(object):
             t1i = np.argmin((self.times - t1) ** 2)
         # print('%s %s %s %s' % (d0, d1, d0i, d1i))
         # print('%s %s %s %s' % (t0, t1, t0i, t1i))
-        depths = self.depths[d0i: d1i]
-        times = self.times[t0i: t1i]
+        depths = self.depths[d0i:d1i]
+        times = self.times[t0i:t1i]
         new = WAF()
-        new.generate(self.data[d0i: d1i, t0i: t1i], depths, times, parent=self)
+        new.generate(self.data[d0i:d1i, t0i:t1i], depths, times, parent=self)
         return new
 
     def htrace(self, depth):
         """Return a horizontal (i.e. depth-invariant) trace.
-        
+
         Args:
             depth (float): if it is not present, the nearest
                 depth will be returned, no interpolation
                 between frames will be done.
-        
+
         Returns:
             depth, data (tuple) - depth as requested, data
             is an array of length *m*
-        
+
         """
         di = np.argmin((self.depths - depth) ** 2)
-        logger.debug(f"self.data.shape = {self.data.shape} - self.times.shape = {self.times.shape}")
+        logger.debug(
+            f"self.data.shape = {self.data.shape} - self.times.shape = {self.times.shape}"
+        )
         return self.depths[di], self.data[di, :]
 
     def vtrace(self, time, interptime=True):
         """Return a vertical (i.e. time-invariant) trace.
-        
+
         Args:
             time (float)
             interptime (bool): interpolate the data to
@@ -170,16 +173,18 @@ class WAF(object):
         Returns:
             time, data (tuple) - time is a float, data
             is an array of length *n*
-        
+
         """
         ti = np.argmin((self.times - time) ** 2)
-        logger.debug(f"self.data.shape = {self.data.shape} - self.depths.shape = {self.depths.shape}")
+        logger.debug(
+            f"self.data.shape = {self.data.shape} - self.depths.shape = {self.depths.shape}"
+        )
         if interptime:
             # Still to implement interpolation of times.
             return time, self.data[:, ti]
         else:
             return self.times[ti], self.data[:, ti]
-        
+
     def to_file(self, file_obj):
         file_obj.write(",".join(["Depth"] + [f"{t:.2f} us" for t in self.times]) + "\n")
         file_obj.write(",".join(["m"] + ["" for t in self.times]) + "\n")
@@ -188,10 +193,7 @@ class WAF(object):
             file_obj.write(",".join([str(x) for x in out_data[i, :]]) + "\n")
 
 
-
-
 class WAI(object):
-
     def __init__(self, fn=None):
         self.__vmin = None
         self.__vmax = None
@@ -252,14 +254,13 @@ class WAI(object):
         amplitudes = ax.hist(self.data.ravel(), bins=30, log=True)
 
     def print_depths(self):
-        print('%s %s %s' % ("depth range", self.depths[:3], "..."))
-        print('%s %s %s' % (self.depths[self.n-3:], "n =", self.n))
-        print('%s %s %s' % ("azimuths range", self.azimuths[:3], "..."))
-        print('%s %s %s' % (self.azimuths[self.m-3:], "m =", self.m))
+        print("%s %s %s" % ("depth range", self.depths[:3], "..."))
+        print("%s %s %s" % (self.depths[self.n - 3 :], "n =", self.n))
+        print("%s %s %s" % ("azimuths range", self.azimuths[:3], "..."))
+        print("%s %s %s" % (self.azimuths[self.m - 3 :], "m =", self.m))
         print(str(self.data.shape))
 
-    def imshow(
-            self, vmin=None, vmax=None, vampl=None, fig=None, ax=None, **kws):
+    def imshow(self, vmin=None, vmax=None, vampl=None, fig=None, ax=None, **kws):
         if ax is None:
             if fig is None:
                 fig = plt.figure()
@@ -268,10 +269,19 @@ class WAI(object):
             vmin = -1 * vampl
             vmax = vampl
         defkws = dict(
-            cmap=self.cmap, vmin=vmin, vmax=vmax, interpolation="nearest",
-            origin="upper", aspect="auto", extent=[
-                self.azimuths[0], self.azimuths[-1],
-                self.depths[-1], self.depths[0]])
+            cmap=self.cmap,
+            vmin=vmin,
+            vmax=vmax,
+            interpolation="nearest",
+            origin="upper",
+            aspect="auto",
+            extent=[
+                self.azimuths[0],
+                self.azimuths[-1],
+                self.depths[-1],
+                self.depths[0],
+            ],
+        )
         defkws.update(**kws)
         ax.imshow(self.data, **defkws)
 
@@ -281,7 +291,7 @@ class WAI(object):
                 fig = plt.figure()
             ax = fig.add_subplot(111, polar=True)
         ax.set_theta_direction(-1)
-        ax.set_theta_offset(np.pi / 2.)
+        ax.set_theta_offset(np.pi / 2.0)
         actualdepth, data = self.htrace(depth, retdepth=True)
         thetas = np.deg2rad(self.azimuths)
         ax.plot(thetas, data, **kws)
@@ -311,13 +321,12 @@ class WAI(object):
             t1i = len(self.azimuths) - 1
         else:
             t1i = np.argmin((self.azimuths - t1) ** 2)
-        print('%s %s %s %s' % (d0, d1, d0i, d1i))
-        print('%s %s %s %s' % (t0, t1, t0i, t1i))
-        depths = self.depths[d0i: d1i]
-        azimuths = self.azimuths[t0i: t1i]
+        print("%s %s %s %s" % (d0, d1, d0i, d1i))
+        print("%s %s %s %s" % (t0, t1, t0i, t1i))
+        depths = self.depths[d0i:d1i]
+        azimuths = self.azimuths[t0i:t1i]
         new = FWSWaf()
-        new.generate(
-            self.data[d0i: d1i, t0i: t1i], depths, azimuths, parent=self)
+        new.generate(self.data[d0i:d1i, t0i:t1i], depths, azimuths, parent=self)
         return new
 
     def htrace(self, depth, retdepth=False):

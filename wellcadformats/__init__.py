@@ -6,7 +6,7 @@ from .curvedata import WAW
 
 from .wa import Comments
 
-__version__ = '0.1'
+__version__ = "0.1"
 
 
 class UnknownFormat(IOError):
@@ -16,15 +16,14 @@ class UnknownFormat(IOError):
 def read(filename):
     name, ext = os.path.splitext(filename)
     ext = ext.lower()
-    if ext == 'waf':
+    if ext == "waf":
         return WAF(filename)
-    elif ext == 'wai':
+    elif ext == "wai":
         return WAI(filename)
-    elif ext == 'waw':
+    elif ext == "waw":
         return WAW(filename=filename)
     else:
-        raise UnknownFormat('Cannot read in %s files' % ext)
-
+        raise UnknownFormat("Cannot read in %s files" % ext)
 
 
 class MultipleExport(object):
@@ -42,9 +41,9 @@ class MultipleExport(object):
         self.refresh()
 
     def readpath(self, path):
-        fns = glob.glob(os.path.join(path, '*.w??'))
+        fns = glob.glob(os.path.join(path, "*.w??"))
         self.readfiles(fns)
-                
+
     def readfiles(self, *fns):
         for fn in fns:
             self.read(fn)
@@ -61,4 +60,3 @@ class MultipleExport(object):
     #             indices[index_key] = 1
     #         else:
     #             indices[index_key] += 1
-

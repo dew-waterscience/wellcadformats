@@ -7,7 +7,7 @@ import pandas as pd
 
 class WAW(object):
 
-    '''Open .waw file.
+    """Open .waw file.
 
     Args:
         file_obj (file-like object): optional open file-like object
@@ -19,7 +19,7 @@ class WAW(object):
         df (pandas.DataFrame): dataframe of data
         index (numpy.ndarray): reference data for the log (i.e. depth)
 
-    '''
+    """
 
     def __init__(self, filename=None, file_obj=None):
         self._units = {}
@@ -28,20 +28,20 @@ class WAW(object):
 
     def read(self, file_obj=None, filename=None):
         if not filename is None:
-            file_obj = open(filename, mode='r')
+            file_obj = open(filename, mode="r")
         for i, line in enumerate(file_obj.readlines()):
-            line = line.strip('\n')
+            line = line.strip("\n")
             if i == 0:
-                names = line.split(',')
+                names = line.split(",")
             elif i == 1:
-                units = [u.strip() for u in line.split(',')]
+                units = [u.strip() for u in line.split(",")]
             else:
                 break
         for name, unit in zip(names, units):
             self.set_unit(name, unit)
-        
+
         file_obj.seek(0)
-        data = np.loadtxt(file_obj, skiprows=2, delimiter=',')
+        data = np.loadtxt(file_obj, skiprows=2, delimiter=",")
         self.df = pd.DataFrame(data, columns=names)
 
         if not filename is None:
@@ -58,7 +58,7 @@ class WAW(object):
             return self.get_unit(name)
         else:
             raise KeyError(f"Well log '{name}' not known")
-    
+
     @classmethod
     def from_df(cls, df, units=None):
         self = cls()
@@ -82,7 +82,7 @@ class WAW(object):
         for curve in las.curves:
             curve.unit = self.get_unit(curve.mnemonic)
         return las
-    
+
     def to_las(self, *args, **kwargs):
         las = self.to_lasio_object()
         return las.write(*args, **kwargs)
